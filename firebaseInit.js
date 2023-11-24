@@ -1,38 +1,25 @@
-// Importation des bibliothèques nécessaires
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+const admin = require('firebase-admin');
+const fs = require('fs');
 
-// Configuration de Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyAgFbMUel0ySk_brhuBq8GMXK2FbOIkRbk",
-    authDomain: "bibliz-f9be0.firebaseapp.com",
-    projectId: "bibliz-f9be0",
-    storageBucket: "bibliz-f9be0.appspot.com",
-    messagingSenderId: "1048096721817",
-    appId: "1:1048096721817:web:cd3eef47bf9cafb51fa108",
-    measurementId: "G-FDNN3XWQ6S"
-};
+// Vous devez télécharger votre fichier de configuration de service Firebase personnel
+// et le référencer ici.
+const serviceAccount = require('/Users/strippolijules/Documents/test/Bibliz/bibliz-f9be0-firebase-adminsdk-ezhqw-553403baa5.json');
 
-// Initialisation de Firebase
-const app = initializeApp(firebaseConfig);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
-// Accès à Firestore
-const db = getFirestore(app);
+const db = admin.firestore();
 
-class FirebaseInit {
-    constructor() {
-        this.db = db;
-    }
+async function exportStarPositions() {
+  const starPositions = [];
+  const snapshot = await db.collection('stars').get();
+  
+  snapshot.forEach(doc => {
+    starPositions.push(doc.data());
+  });
 
-    async getStarPositions() {
-        // Récupération des données de la collection 'stars'
-        const snapshot = await getDocs(collection(this.db, 'stars'));
-        const starPositions = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return { x: data.x, y: data.y, z: data.z };
-        });
-        return starPositions;
-    }
+  fs.writeFileSync('starPositions.json', JSON.stringify(starPositions, null, 2));
 }
 
-export default FirebaseInit;
+exportStarPositions();
